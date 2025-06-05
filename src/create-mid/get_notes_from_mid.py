@@ -9,25 +9,27 @@ def midi_to_notes(filename):
     with open('midi_output.txt', 'w') as output_file:
         for i, track in enumerate(mid.tracks):
             output_file.write('Track {}: {}\n'.format(i, track.name))
-            
+
             # We'll store notes here as (note, duration) tuples
             notes = []
 
             # For holding notes that haven't been turned off yet
             pending = {}
 
+            time = 0  # Keep track of absolute time within the track
+
             for msg in track:
+                # Update absolute time first
+                time += tick2second(msg.time, mid.ticks_per_beat, 500000)  # Default tempo is 500000 microseconds per beat
+
                 # Only interested in note on/off messages
-                if not msg.type in ['note_on', 'note_off']:
+                if msg.type not in ['note_on', 'note_off']:
                     continue
 
                 note = msg.note
 
-                # tick2second() converts the time attribute to seconds, using the MIDI file's ticks_per_beat and tempo
-                time = tick2second(msg.time, mid.ticks_per_beat, 500000)  # Default tempo is 500000 microseconds per beat
-
                 if msg.type == 'note_on':
-                    # Add note to pending notes
+                    # Add note to pending notes at current time
                     pending[note] = time
                 elif msg.type == 'note_off':
                     # If note is in pending, add it to notes with its duration
