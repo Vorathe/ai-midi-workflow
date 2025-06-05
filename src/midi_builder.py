@@ -50,9 +50,45 @@ def build_midi_file(
 
 
 def parse_notes(text: str) -> List[Note]:
-    """Parse a textual ``[(pitch, duration), ...]`` representation."""
-    import ast
+    """Parse a textual ``[(pitch, duration), ...]`` representation.
 
+    Besides a literal Python list of tuples, a simpler notation is
+    supported where items are separated by whitespace or commas and
+    each note is expressed as ``pitch:duration`` (``60:0.5``).
+    """
+    import ast
+    import re
+
+    original = text
     if "=" in text:
         text = text.split("=", 1)[1]
-    return list(ast.literal_eval(text.strip()))
+    text = text.strip()
+
+    # Try Python literal evaluation first
+    try:
+        notes = ast.literal_eval(text)
+        return list(notes)
+    except Exception:
+        pass
+
+    # Fallback: simple ``pitch:duration`` tokens
+    tokens = re.split(r"[\s,]+", text)
+    notes = []
+    for token in tokens:
+        if not token:
+            continue
+        token = token.strip("()[]")
+        if ":" in token:
+            pitch_str, dur_str = token.split(":", 1)
+        elif "-" in token:
+            pitch_str, dur_str = token.split("-", 1)
+        elif "/" in token:
+            pitch_str, dur_str = token.split("/", 1)
+        else:
+            parts = token.split()
+            if len(parts) != 2:
+                raise ValueError(f"Cannot parse note token: '{token}' from '{original}'")
+            pitch_str, dur_str = parts
+        notes.append((int(pitch_str), float(dur_str)))
+
+    return notes
