@@ -7,6 +7,7 @@ Utilities for experimenting with MIDI generation using Python.
 The `src/midi_builder.py` module provides a simple way to turn lists of
 `(pitch, duration)` tuples into a MIDI file. Durations are expressed in
 beats where `1` equals a whole note. Pitches are MIDI note numbers (21–96).
+
 Note strings can be written as a Python list of tuples or using a simple
 ``pitch:duration`` notation:
 
